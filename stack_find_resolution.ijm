@@ -12,6 +12,7 @@
  * 								 plots. Update to 1.1 and renamed to stack_find_resolution from stack_find_edge.
  * 								 stack_find_edge is now deprecated.
  * 						8/11/16: Plot stack is now displayed in RGB.
+ * 						9/23/16: Added peak height column to edge_widths_contrast.txt. Peak height is displayed as abs(peak).
  */
  
 // Global scan ioc pv name 
@@ -85,6 +86,7 @@ macro "stack_find_resolution" {
     	fwhm = newArray(nSlices);
     	contrast = newArray(nSlices);
     	mean = newArray(nSlices);
+    	peak = newArray(nSlices);
     	// put all plots in their seperate respective stacks
     	profile_stack = 0;
     	for (i = 1; i <=nSlices; i++) {
@@ -113,6 +115,7 @@ macro "stack_find_resolution" {
     		fwhm[i-1] = sp[0];
     		contrast[i-1] = sp[1];
     		mean[i-1] = sp[2];
+    		peak[i-1] = sp[3];
     		selectImage(imgname);
      	}	
 		if (is_scan == "Yes") {
@@ -124,8 +127,8 @@ macro "stack_find_resolution" {
 		}
 		// write results to file
 		f = File.open(dir + "edge_widths_contrast" + ".txt");
-		print(f, "FWHM (pixel)" + "\t" + "Contrast (pixel)" + "\t" + "Peak position (pixel)" + "\t" + "z (mm)"); 
-    	writeFile(f, z, fwhm, contrast, mean);
+		print(f, "FWHM (pixel)" + "\t" + "Contrast (pixels)" + "\t" + "Peak position (pixels)" + "\t"  + "Peak height (pixels)" + "\t" + "Scan Axis"); 
+    	writeFile(f, z, fwhm, contrast, mean, peak);
     }
 	waitForUser("Information", fit_func + " Fits Completed");
 }
@@ -170,11 +173,12 @@ function plot3d(z, val) {
 	return opt;
 }
 // Seperate write to file routine
-function writeFile(f, x, y, p, m) {
+function writeFile(f, x, y, p, m, a) {
     xx = "";
     yy = "";
     pp = "";
     mm = "";
+    aa = "";
     zz = "";
     z = 0;
     while(z < x.length) {
@@ -182,7 +186,8 @@ function writeFile(f, x, y, p, m) {
     	yy = toString(y[z]) + "\t";
     	pp = toString(p[z]) + "\t";
     	mm = toString(m[z]) + "\t";
-    	zz = yy + pp + mm + xx;
+    	aa = toString(a[z]) + "\t";
+    	zz = yy + pp + mm + aa + xx;
     	z++;
 	    print(f, zz);
 	}
