@@ -174,6 +174,7 @@ macro "single_find_resolution" {
     		FWHM = FWHM_g;
     		AREA = abs(area_g);
     		MEAN = mean_g;
+    		PEAK = abs(peak_g);
 		}
 	}
 	// Lorentzian fit routine
@@ -201,6 +202,7 @@ macro "single_find_resolution" {
     		FWHM = abs(FWHM_l);
     		AREA = abs(area_l);
     		MEAN = mean_l;
+    		PEAK = abs(peak_l);
     	}
 	}
 	//Pseudo-Voigt fit routine
@@ -234,6 +236,7 @@ macro "single_find_resolution" {
     	FWHM = abs(FWHM_v);
     	AREA = abs(area_v);
     	MEAN = mean_v; 
+    	PEAK = abs(peak_v);
 		
 	}
 	rename(fit_func + " Fit");
@@ -245,8 +248,9 @@ macro "single_find_resolution" {
 	fwhm_str = toString(FWHM, 4);
 	contrast_str = toString(AREA, 4);
 	mean_str = toString(MEAN, 4);
+	peak_str = toString(PEAK, 4);
 	// Return fwhm, area under lsf (edge step height) and peak position in pixels
-	return fwhm_str + " " + contrast_str + " " + mean_str;		
+	return fwhm_str + " " + contrast_str + " " + mean_str + " " + peak_str;		
 }
 // Seperate write to file routine
 function writeFile(f, x, y) {
