@@ -123,11 +123,11 @@ macro "stack_find_resolution" {
 			opt_peakz = plot3d(z, contrast);
 			close();
  			opt_fwhmz = plot3d(z, fwhm);	
- 			print("Optimum z-position (mm) from fwhm:", opt_fwhmz);
+ 			print("Optimum position from fwhm:", opt_fwhmz);
 		}
 		// write results to file
 		f = File.open(dir + "edge_widths_contrast" + ".txt");
-		print(f, "FWHM (pixel)" + "\t" + "Contrast (pixels)" + "\t" + "Peak position (pixels)" + "\t"  + "Peak height (pixels)" + "\t" + "Scan Axis"); 
+		print(f, "FWHM (pixel)" + "\t" + "Contrast (DN)" + "\t" + "Peak position (pixels)" + "\t"  + "Peak height (DN)" + "\t" + "Scan Axis"); 
     	writeFile(f, z, fwhm, contrast, mean, peak);
     }
 	waitForUser("Information", fit_func + " Fits Completed");
