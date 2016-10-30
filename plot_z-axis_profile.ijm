@@ -9,6 +9,7 @@
  * __to-do__      = 
  * __update-log__ =
  */
+ 
 requires("1.49t");
 macro "plot_z-axis_profile" {
       if (nSlices==1) {
@@ -61,7 +62,7 @@ macro "plot_z-axis_profile" {
       	makeFancy();
       }
 }
-// Seperate write to file routine
+
 function makeFancy() {
     	Plot.setLineWidth(1);
     	Plot.setColor("lightGray");
