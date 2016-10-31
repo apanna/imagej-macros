@@ -7,12 +7,13 @@
  * __status__   	=   stable
  * __date__			=	03/04/2015
  * __to-do__		=	add progress bar
- * __update-log__	=	8/10/16: Updated to work for profile or edge derivative fits depending on user choice. 
- * 								 Added option for Pseudo Voigt fitting. Fixed bug in stacking algorithm for fit
- * 								 plots. Update to 1.1 and renamed to stack_find_resolution from stack_find_edge.
- * 								 stack_find_edge is now deprecated.
- * 						8/11/16: Plot stack is now displayed in RGB.
- * 						9/23/16: Added peak height column to edge_widths_contrast.txt. Peak height is displayed as abs(peak).
+ * __update-log__	=	08/10/16: Updated to work for profile or edge derivative fits depending on user choice. 
+ * 								  Added option for Pseudo Voigt fitting. Fixed bug in stacking algorithm for fit
+ * 								  plots. Update to 1.1 and renamed to stack_find_resolution from stack_find_edge.
+ * 								  stack_find_edge is now deprecated.
+ * 						08/11/16: Plot stack is now displayed in RGB.
+ * 						09/23/16: Added peak height column to edge_widths_contrast.txt. Peak height is displayed as abs(peak).
+ * 						10/30/16: Allow for roi xy translation for image stacks.
  */
  
 // Global scan ioc pv name 
@@ -23,29 +24,34 @@ macro "stack_find_resolution" {
     profile_choice = newArray("Horizontal", "Vertical");
     scan_choice = newArray("Yes", "No");
     epics_choice = newArray("Yes", "No");
-    
-    Dialog.create("Menu");
-    Dialog.addChoice("Fit type:", type_choice, "Profile");
-	Dialog.addChoice("Profile Direction:", profile_choice, "Horizontal");
-    Dialog.addChoice("Fit Function:", fit_choice, "Gaussian"); 
-    Dialog.addChoice("Is this a Scan?", scan_choice, "No");
-    Dialog.addChoice("Use EPICSIJ?", epics_choice, "No");
-    Dialog.show();
-    fit_type = Dialog.getChoice();
-    prof_dir = Dialog.getChoice();
-    fit_func = Dialog.getChoice();
-    is_scan = Dialog.getChoice();
-    is_epics = Dialog.getChoice();
-  
+  	args = "";
 	imgname = getTitle(); 
 	imgID = getImageID();
     dir = getDirectory("image");
-    args = fit_type + " " + prof_dir + " " + fit_func;
     if (nSlices == 1) {
     	// no stack condition
   		d = runMacro("single_find_resolution", args);
     }
-    if (imgname == "Stack" || nSlices > 1) {    	
+    if (imgname == "Stack" || nSlices > 1) {
+    	Dialog.create("Menu");
+    	Dialog.addChoice("Fit type:", type_choice, "Profile");
+		Dialog.addChoice("Profile Direction:", profile_choice, "Horizontal");
+    	Dialog.addChoice("Fit Function:", fit_choice, "Gaussian"); 
+    	Dialog.addChoice("Is this a Scan?", scan_choice, "No");
+    	Dialog.addChoice("Use EPICSIJ?", epics_choice, "No");
+    	Dialog.addNumber("ROI translate X", 0, 0, 5, "pixels");
+    	Dialog.addNumber("ROI translate Y", 0, 0, 5, "pixels");
+    	Dialog.show();
+    
+    	fit_type = Dialog.getChoice();
+    	prof_dir = Dialog.getChoice();
+    	fit_func = Dialog.getChoice();
+    	is_scan = Dialog.getChoice();
+    	is_epics = Dialog.getChoice();
+    	roi_x = Dialog.getNumber();
+ 		roi_y = Dialog.getNumber();
+ 		args = fit_type + " " + prof_dir + " " + fit_func;
+ 		
     	// array for scan axis
     	z = newArray(nSlices);
     	if (is_scan == "Yes") {
@@ -92,6 +98,8 @@ macro "stack_find_resolution" {
     	for (i = 1; i <=nSlices; i++) {
     		selectImage(imgname);
     		setSlice(i);
+    		Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
+    		Roi.move(upper_left_x + roi_x, upper_left_y + roi_y);
     		d = runMacro("single_find_resolution", args);
   	 		selectWindow(fit_func + " Fit");
   	 		w = getWidth;
@@ -126,11 +134,14 @@ macro "stack_find_resolution" {
  			print("Optimum position from fwhm:", opt_fwhmz);
 		}
 		// write results to file
+		if (dir == getDirectory("imagej")) {
+    		dir = getDirectory("Select Output Directory");
+    	}
 		f = File.open(dir + "edge_widths_contrast" + ".txt");
 		print(f, "FWHM (pixel)" + "\t" + "Contrast (DN)" + "\t" + "Peak position (pixels)" + "\t"  + "Peak height (DN)" + "\t" + "Scan Axis"); 
     	writeFile(f, z, fwhm, contrast, mean, peak);
     }
-	waitForUser("Information", fit_func + " Fits Completed");
+	waitForUser("Information", "Fits Completed");
 }
 // Seperate plotting routine for 2nd order fitting
 function plot3d(z, val) {
