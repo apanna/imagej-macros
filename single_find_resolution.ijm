@@ -10,22 +10,23 @@
  *  __version__         =   2.0
  *  __to-do__			=	cauchy and pseudo voigt fits are computationally expensive in this iteration. Need to find a way			   
  *  						to make these fits faster.
- *  __update-log__		= 	3/08/15: Now returns contrast information (edge response height) as area under gaussian LSF curve
- *  						3/10/15: added mtf capability, edge step height evaluation in terms of Lorentzian LSF fit area.
- *  						3/13/15: prints contrast count as well.
- *  						3/18/15: Decided not to normalize mtf for now. (Dr. Wens suggestion)
- *  						3/19/15: Added function makeFancy to make the mtf plots look nicer
- *  						3/25/15: Fixed normalization issue of mtf. Raw mtf should give proper contrast values now.
- *  						3/30/15: Added method for % roi selected in image to be printed in log
- *  						3/31/15: MTF is normalized now. 
- *  						5/05/15: Moved MTF algorithm to py script. Removed from here. 
- *  						5/29/15: Renamed return variables for better code reading. Macro also returns peak position now. 
- *  						8/10/16: Added pseudo voigt fit function as an option for fitting. This macro also fits generic profiles.
- *  						         and is not limited to derivative of edge profile fitting i.e. LSF fitting anymore Update version
- *  						         to 2.0 single_fit_edge is now deprecated.
- *  					    8/11/16: Changed Lorentzian and Pseudo-Voigt fit function equation to accomodate for y offset. Lorentzian 
- *  					    		 guess parameters are not estimated from the gaussian fit anymore, so that the gaussian fit is not 	
- *  					    		 performed everytime the user selects Lorentzian fitting. 
+ *  __update-log__		= 	03/08/15: Now returns contrast information (edge response height) as area under gaussian LSF curve
+ *  						03/10/15: added mtf capability, edge step height evaluation in terms of Lorentzian LSF fit area.
+ *  						03/13/15: prints contrast count as well.
+ *  						03/18/15: Decided not to normalize mtf for now. (Dr. Wens suggestion)
+ *  						03/19/15: Added function makeFancy to make the mtf plots look nicer
+ *  						03/25/15: Fixed normalization issue of mtf. Raw mtf should give proper contrast values now.
+ *  						03/30/15: Added method for % roi selected in image to be printed in log
+ *  						03/31/15: MTF is normalized now. 
+ *  						05/05/15: Moved MTF algorithm to py script. Removed from here. 
+ *  						05/29/15: Renamed return variables for better code reading. Macro also returns peak position now. 
+ *  						08/10/16: Added pseudo voigt fit function as an option for fitting. This macro also fits generic profiles.
+ *  						          and is not limited to derivative of edge profile fitting i.e. LSF fitting anymore Update version
+ *  						          to 2.0 single_fit_edge is now deprecated.
+ *  					    08/11/16: Changed Lorentzian and Pseudo-Voigt fit function equation to accomodate for y offset. Lorentzian 
+ *  					    		  guess parameters are not estimated from the gaussian fit anymore, so that the gaussian fit is not 	
+ *  					    		  performed everytime the user selects Lorentzian fitting. 
+ *  					    11/21/16: Print peak position and peak height in log as well.
  */
  
 requires("1.49i");
@@ -42,8 +43,8 @@ macro "single_find_resolution" {
 	if (args == "") {
 		// Display dialog if fit and edge choice are not already pre-defined.
 		type_choice = newArray("Profile", "Edge");
-		fit_choice = newArray("Gaussian", "Lorentzian", "Pseudo-Voigt");
     	profile_choice = newArray("Horizontal", "Vertical");
+    	fit_choice = newArray("Gaussian", "Lorentzian", "Pseudo-Voigt");
   		Dialog.create("Menu");
   		Dialog.addChoice("Fit type:", type_choice, "Profile");
 		Dialog.addChoice("Profile Direction:", profile_choice, "Horizontal");
@@ -54,7 +55,7 @@ macro "single_find_resolution" {
     	fit_func = Dialog.getChoice();
 	}
 	else {
-		// use the setting from stack_fit_profile.ijm
+		// use settings from stack_find_resolution.ijm
 		arr = split(args, " ");
 		fit_type = arr[0];
 		prof_dir = arr[1];
@@ -242,15 +243,18 @@ macro "single_find_resolution" {
 	rename(fit_func + " Fit");
 	print(fit_func + " " + prof_dir + " Profile FWHM" + ":", FWHM + " pixels");
 	print("Contrast" + ":", AREA + " DN");
+	print("Peak height" + ":", PEAK + " DN");
+	print("Peak Position" + ":", MEAN + " pixels");
 	print("ROI (W x H): " + toString(width_roi) + " x " + toString(height_roi) + " pixels"); 
 	print(toString(per_area) + " % " +  "of total image selected!");
-	print("---------------------------------------------------------");
+	print("--------------------------------------------------------------");
 	fwhm_str = toString(FWHM, 4);
 	contrast_str = toString(AREA, 4);
 	mean_str = toString(MEAN, 4);
 	peak_str = toString(PEAK, 4);
-	// Return fwhm, area under lsf (edge step height) and peak position in pixels
-	return fwhm_str + " " + contrast_str + " " + mean_str + " " + peak_str;		
+	
+	// Return fwhm, area under curve, peak position in pixels, peak height, and fit function
+	return fwhm_str + " " + contrast_str + " " + mean_str + " " + peak_str + " " + toString(fit_func);		
 }
 // Seperate write to file routine
 function writeFile(f, x, y) {
@@ -266,4 +270,4 @@ function writeFile(f, x, y) {
 	    print(f, zz);
 	}
 	File.close(f);
-}
+}
