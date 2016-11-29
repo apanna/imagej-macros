@@ -15,6 +15,8 @@
  * 						09/23/16: Added peak height column to edge_widths_contrast.txt. Peak height is displayed as abs(peak).
  * 						10/30/16: Allow for roi xy translation for image stacks.
  * 						11/21/16: Fix bug in roi translation, save fit plots stack
+ * 						11/29/16: (HW) Change ROI translate so that it is no longer relative	
+ * 						           to previous image in stack. This also fixes a rounding error bug. 
  */
  
 // Global scan ioc pv name 
@@ -103,15 +105,11 @@ macro "stack_find_resolution" {
     	peak = newArray(nSlices);
     	// put all plots in their seperate respective stacks
     	profile_stack = 0;
+    	Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
     	for (i = 1; i <=nSlices; i++) {
     		selectImage(imgname);
-    		setSlice(i);
-    		Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
-    		// Don't move on the first image
-    		if (i != 1) {
-    			// translate the roi
-    			Roi.move(upper_left_x + roi_x, upper_left_y + roi_y);
-    		}
+    		setSlice(i);
+			makeRectangle(upper_left_x + roi_x * (i-1), upper_left_y + roi_y * (i-1));
     		d = runMacro("single_find_resolution", args);
   	 		selectWindow(fit_func + " Fit");
   	 		w = getWidth;
