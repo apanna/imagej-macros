@@ -8,6 +8,8 @@
  * __date__       = 08/10/2016
  * __to-do__      = 
  * __update-log__ = 11/24/16: Add ROI translate feature
+ * 					11/29/16: (HW) Change ROI translate so that it is no longer relative	
+ * 						           to previous image in stack. This fixes a rounding error bug. 
  */
  
 requires("1.49t");
@@ -30,12 +32,10 @@ macro "plot_z-axis_profile" {
       norm_stdDevs = newArray(nSlices);
       mins = newArray(nSlices);
       maxs = newArray(nSlices);
+      Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
       for (i=1; i<=nSlices; i++) {
           setSlice(i);
-          Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
-          if (i > 1) {
-    	  	Roi.move(upper_left_x + roi_x, upper_left_y + roi_y);
-          }
+		  makeRectangle(upper_left_x + roi_x * (i-1), upper_left_y + roi_y * (i-1));	
           getStatistics(area, mean, min, max, std);
           means[i-1] = mean;
           stdDevs[i-1] = std;
