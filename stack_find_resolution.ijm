@@ -109,7 +109,8 @@ macro "stack_find_resolution" {
     	for (i = 1; i <=nSlices; i++) {
     		selectImage(imgname);
     		setSlice(i);
-			makeRectangle(upper_left_x + roi_x * (i-1), upper_left_y + roi_y * (i-1));
+    		// translate roi
+			Roi.move(upper_left_x + roi_x * (i-1), upper_left_y + roi_y * (i-1));
     		d = runMacro("single_find_resolution", args);
   	 		selectWindow(fit_func + " Fit");
   	 		w = getWidth;
@@ -121,7 +122,6 @@ macro "stack_find_resolution" {
             	profile_stack = getTitle();
             	selectImage(profile_stack);
             	run("Paste");
-            	selectImage(imgname);
         	} 
         	else {
             	selectImage(profile_stack);
