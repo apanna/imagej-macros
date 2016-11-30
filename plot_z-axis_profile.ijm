@@ -35,6 +35,7 @@ macro "plot_z-axis_profile" {
       Roi.getBounds(upper_left_x, upper_left_y, width_roi, height_roi);
       for (i=1; i<=nSlices; i++) {
           setSlice(i);
+          // translate roi
 		  Roi.move(upper_left_x + roi_x * (i-1), upper_left_y + roi_y * (i-1));
           getStatistics(area, mean, min, max, std);
           means[i-1] = mean;
